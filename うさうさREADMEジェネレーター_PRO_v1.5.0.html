@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>うさうさ README ジェネレーター PRO</title>
+<style>
+  :root{
+    --bg:#140a11;--bg2:#1c0f18;--panel:#22131d;--panel2:#1a0e17;--ink:#f6eee9;--muted:#c2a8b6;--faint:#8a6f7e;
+    --rose:#d76e95;--rose-d:#9b3d6e;--gold:#d8b25c;--gold-d:#c9a24e;--teal:#5cc6b8;--ok:#74d6a0;--err:#ff7b8c;
+    --line:rgba(215,110,149,.22);--line-g:rgba(216,178,92,.3);
+    --mono:ui-monospace,"SFMono-Regular",Menlo,"Roboto Mono",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0;height:100%}
+  body{font-family:var(--sans);color:var(--ink);background:
+    radial-gradient(900px 600px at 88% -6%,rgba(216,178,92,.12),transparent 60%),
+    radial-gradient(900px 600px at 4% 0%,rgba(215,110,149,.14),transparent 58%),
+    linear-gradient(180deg,var(--bg),var(--bg2));min-height:100vh;line-height:1.6}
+  a{color:var(--teal)} ::selection{background:rgba(216,178,92,.3)}
+  .mono{font-family:var(--mono)}
+  button{font-family:var(--sans)}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:rgba(215,110,149,.3);border-radius:6px}
+
+  header.bar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 20px;border-bottom:1px solid var(--line-g);background:linear-gradient(180deg,rgba(20,10,17,.96),rgba(20,10,17,.7));backdrop-filter:blur(8px)}
+  .logo{width:42px;height:42px;border-radius:13px;flex:none;display:grid;place-items:center;font-size:22px;background:radial-gradient(circle at 32% 28%,rgba(216,178,92,.5),rgba(155,61,110,.45));border:1px solid var(--gold-d);box-shadow:0 0 18px rgba(216,178,92,.3)}
+  .ttl h1{font-size:16px;margin:0;letter-spacing:.02em;background:linear-gradient(90deg,var(--gold),var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .ttl .sub{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--rose)}
+  .chip{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;color:#2a141f;background:var(--gold);padding:2px 8px;border-radius:8px;margin-left:8px;font-weight:800}
+  .bar .spacer{flex:1}
+  .btn{font-weight:700;font-size:12px;letter-spacing:.03em;color:#2a141f;background:var(--gold);border:0;padding:9px 14px;border-radius:11px;cursor:pointer;transition:.15s;white-space:nowrap}
+  .btn:hover{filter:brightness(1.07);transform:translateY(-1px);box-shadow:0 6px 18px rgba(216,178,92,.25)}
+  .btn.rose{background:var(--rose)} .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)} .btn.ghost:hover{background:rgba(215,110,149,.12);box-shadow:none}
+  .btn.sm{padding:6px 10px;font-size:11px;border-radius:9px}
+  select.preset{font-family:var(--sans);font-size:12px;font-weight:700;color:var(--ink);background:var(--panel);border:1px solid var(--line-g);border-radius:11px;padding:8px 12px;cursor:pointer}
+  button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+  .filein{display:none}
+
+  .wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;height:calc(100vh - 67px)}
+  .pane{overflow:auto;padding:18px 20px 80px}
+  .editor{border-right:1px solid var(--line-g)}
+  .preview{background:linear-gradient(180deg,rgba(10,5,9,.5),rgba(10,5,9,.2))}
+
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .card>.chead{display:flex;align-items:center;gap:10px;padding:11px 14px;background:rgba(215,110,149,.07);border-bottom:1px solid var(--line)}
+  .card>.chead .ic{font-size:15px} .card>.chead h2{font-size:13px;margin:0;letter-spacing:.02em;flex:1} .card>.cbody{padding:14px}
+  .sectionhead{display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(216,178,92,.06);border-bottom:1px solid var(--line)}
+  .sectionhead .mv{display:flex;flex-direction:column;gap:2px}
+  .iconbtn{width:26px;height:24px;border-radius:7px;border:1px solid var(--line);background:rgba(215,110,149,.06);color:var(--muted);cursor:pointer;font-size:12px;line-height:1;display:grid;place-items:center;transition:.13s} .iconbtn:hover{background:rgba(215,110,149,.18);color:var(--ink)} .iconbtn.sm2{height:11px;font-size:9px}
+  .sectionhead input.title{flex:1;font-weight:700;font-size:13px;color:var(--ink);background:transparent;border:1px solid transparent;border-radius:7px;padding:6px 8px} .sectionhead input.title:focus{background:rgba(10,5,9,.5);border-color:var(--gold-d)}
+  .typetag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;color:var(--faint);border:1px solid var(--line);border-radius:7px;padding:2px 7px;white-space:nowrap}
+  .toggle{position:relative;width:38px;height:21px;flex:none;cursor:pointer} .toggle input{display:none} .toggle .tk{position:absolute;inset:0;border-radius:11px;background:rgba(138,111,126,.4);transition:.18s} .toggle .tk::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.18s} .toggle input:checked+.tk{background:var(--rose)} .toggle input:checked+.tk::after{transform:translateX(17px)}
+
+  label.fl{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin:10px 0 4px} label.fl:first-child{margin-top:0}
+  input[type=text],textarea,input.cell{width:100%;font-family:var(--sans);font-size:13px;color:var(--ink);background:rgba(10,5,9,.5);border:1px solid var(--line);border-radius:8px;padding:9px 11px;transition:.14s} input[type=text]:focus,textarea:focus,input.cell:focus{border-color:var(--gold-d);background:rgba(10,5,9,.78);box-shadow:0 0 0 3px rgba(216,178,92,.1)}
+  textarea{min-height:74px;resize:vertical;line-height:1.55;font-family:var(--sans)} textarea.code{font-family:var(--mono);font-size:12.5px} ::placeholder{color:var(--faint)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px} .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  .metaemoji{display:grid;grid-template-columns:64px 1fr;gap:10px}
+
+  .rowx{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px} .rowx .idx{font-family:var(--mono);font-size:11px;color:var(--faint);padding-top:10px;width:20px;text-align:right;flex:none} .rowx input{flex:1}
+  .del{flex:none;width:32px;height:36px;border-radius:8px;border:1px solid var(--line);background:rgba(255,123,140,.08);color:var(--err);cursor:pointer;font-size:14px} .del:hover{background:rgba(255,123,140,.2)}
+  .addrow{font-weight:700;font-size:11.5px;color:#2a141f;background:var(--teal);border:0;border-radius:10px;padding:7px 13px;cursor:pointer;margin-top:2px} .addrow:hover{filter:brightness(1.08)}
+  .faqitem{border:1px solid var(--line);border-radius:9px;padding:10px;margin-bottom:9px;background:rgba(10,5,9,.3)}
+  .ttable{width:100%;border-collapse:collapse} .ttable th,.ttable td{border:1px solid var(--line);padding:3px} .ttable input{border:0;background:transparent;border-radius:5px;font-size:12px} .ttable input:focus{background:rgba(10,5,9,.6)} .ttable th input{font-weight:700;color:var(--gold)}
+  .tbtns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+
+  .badgegrid{display:flex;flex-wrap:wrap;gap:14px;align-items:center} .badgegrid label{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer} .badgegrid input[type=checkbox]{width:16px;height:16px;accent-color:var(--rose)}
+  .opts{display:flex;gap:16px;flex-wrap:wrap;margin-top:4px}
+
+  .addsec{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px} .addsec button{font-weight:700;font-size:11.5px;color:var(--ink);background:rgba(216,178,92,.08);border:1px solid var(--line-g);border-radius:10px;padding:8px 12px;cursor:pointer;transition:.14s} .addsec button:hover{background:rgba(216,178,92,.2)}
+
+  /* preview toolbar */
+  .pvbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;position:sticky;top:-18px;background:linear-gradient(180deg,rgba(16,8,13,.96),rgba(16,8,13,.7));backdrop-filter:blur(6px);padding:10px 0;z-index:5}
+  .seg{display:inline-flex;border:1px solid var(--line-g);border-radius:10px;overflow:hidden} .seg button{font-weight:700;font-size:12px;padding:7px 14px;border:0;background:transparent;color:var(--muted);cursor:pointer} .seg button.on{background:var(--rose);color:#2a141f}
+  .stat{font-family:var(--mono);font-size:10.5px;color:var(--faint);margin-left:auto}
+
+  .rawmd{font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#ecdfe6;background:rgba(6,3,5,.6);border:1px solid var(--line);border-radius:10px;padding:16px;white-space:pre-wrap;word-break:break-word}
+  /* rendered preview (github-ish on dark) */
+  .md{font-size:14px;color:var(--ink)}
+  .md h1{font-size:24px;border-bottom:1px solid var(--line-g);padding-bottom:8px;margin:.2em 0 .6em} .md h2{font-size:19px;border-bottom:1px solid var(--line);padding-bottom:6px;margin:1.3em 0 .5em} .md h3{font-size:16px;margin:1.1em 0 .4em} .md h4{font-size:14px;margin:1em 0 .3em;color:var(--muted)}
+  .md p{margin:.5em 0} .md a{color:var(--teal)} .md strong{color:#fff} .md em{color:var(--gold)}
+  .md ul,.md ol{padding-left:24px;margin:.4em 0} .md li{margin:.2em 0}
+  .md blockquote{border-left:3px solid var(--rose);margin:.6em 0;padding:.2em 14px;color:var(--muted);background:rgba(215,110,149,.06);border-radius:0 8px 8px 0}
+  .md code{font-family:var(--mono);font-size:.86em;background:rgba(216,178,92,.14);border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--gold)}
+  .md pre{background:rgba(6,3,5,.7);border:1px solid var(--line);border-radius:9px;padding:13px 15px;overflow:auto;margin:.7em 0} .md pre code{background:none;border:0;padding:0;color:#ecdfe6;font-size:12.5px}
+  .md table{border-collapse:collapse;width:100%;margin:.7em 0;font-size:13px} .md th,.md td{border:1px solid var(--line);padding:7px 10px;text-align:left} .md th{background:rgba(216,178,92,.1);color:var(--gold)}
+  .md hr{border:0;border-top:1px solid var(--line-g);margin:1.3em 0} .md img{max-width:100%;border-radius:8px}
+  .md .badges img{display:inline-block;margin:2px 4px 2px 0;height:20px}
+
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(18px);z-index:60;font-family:var(--mono);font-size:12px;background:rgba(20,10,17,.97);border:1px solid var(--gold);color:var(--gold);padding:10px 18px;border-radius:10px;box-shadow:0 0 26px rgba(216,178,92,.3);opacity:0;pointer-events:none;transition:.26s} .toast.show{opacity:1;transform:translateX(-50%) translateY(0)} .toast.err{border-color:var(--err);color:var(--err)}
+  .savedot{font-family:var(--mono);font-size:10px;color:var(--faint);display:flex;align-items:center;gap:5px} .savedot i{width:7px;height:7px;border-radius:50%;background:var(--ok);display:inline-block}
+
+  /* blackboard guide */
+  .gbo{position:fixed;inset:0;z-index:90;background:rgba(5,3,4,.82);backdrop-filter:blur(5px);display:none;align-items:center;justify-content:center;padding:22px}
+  .gbo.open{display:flex;animation:gfade .25s ease}
+  @keyframes gfade{from{opacity:0}to{opacity:1}}
+  .gboard{width:min(700px,100%);max-height:88vh;overflow:auto;border-radius:10px;border:14px solid #5b3d23;border-image:linear-gradient(135deg,#6e4a28,#4a3019,#6e4a28) 1;background:radial-gradient(circle at 18% 26%,rgba(255,255,255,.05),transparent 42%),radial-gradient(circle at 82% 72%,rgba(255,255,255,.045),transparent 42%),radial-gradient(circle at 60% 12%,rgba(255,255,255,.03),transparent 30%),linear-gradient(160deg,#27392f,#1c2b24);box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 70px rgba(0,0,0,.45);position:relative;padding:26px 30px 30px}
+  .gboard::after{content:"";position:absolute;left:8%;right:8%;bottom:-9px;height:9px;border-radius:0 0 5px 5px;background:linear-gradient(#7a5430,#5b3d23);box-shadow:0 3px 6px rgba(0,0,0,.4)}
+  .gchalk{color:#eef1e7;text-shadow:0 0 1px rgba(255,255,255,.38),0 0 7px rgba(238,241,231,.12)}
+  .gclose{position:absolute;top:12px;right:14px;width:32px;height:32px;border-radius:50%;background:transparent;border:2px solid rgba(238,241,231,.5);color:#eef1e7;font-size:16px;font-weight:800;cursor:pointer;text-shadow:0 0 6px rgba(238,241,231,.2)}
+  .gclose:hover{border-color:#efb0c0;color:#efb0c0}
+  .ghead{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .ghead .grab{font-size:34px;filter:drop-shadow(0 0 6px rgba(255,255,255,.15))}
+  .gtitle{font-size:21px;font-weight:800;letter-spacing:.04em;display:inline-block}
+  .gunder{display:inline-block;border-bottom:3px solid #f3d98a;padding-bottom:3px;transform:rotate(-.4deg);box-shadow:0 3px 0 -1px rgba(243,217,138,.25)}
+  .gsub{font-size:12.5px;color:#cfe0cf;margin:4px 0 16px;text-shadow:0 0 6px rgba(238,241,231,.1)}
+  .gstep{display:flex;gap:14px;align-items:flex-start;margin:13px 0}
+  .gnum{width:34px;height:34px;border-radius:50%;border:2px solid #f3d98a;color:#f3d98a;display:grid;place-items:center;font-weight:800;font-size:15px;flex:none;box-shadow:0 0 9px rgba(243,217,138,.3)}
+  .gstep:nth-child(2) .gnum{border-color:#9fd0e8;color:#9fd0e8;box-shadow:0 0 9px rgba(159,208,232,.3)}
+  .gstep:nth-child(3) .gnum{border-color:#efb0c0;color:#efb0c0;box-shadow:0 0 9px rgba(239,176,192,.3)}
+  .gstep:nth-child(4) .gnum{border-color:#b7e0a8;color:#b7e0a8;box-shadow:0 0 9px rgba(183,224,168,.3)}
+  .gstep:nth-child(5) .gnum{border-color:#f3d98a;color:#f3d98a}
+  .gstep .gtx{padding-top:3px}
+  .gstep .gtx b{font-weight:800;color:#fff}
+  .gstep .gtx span{display:block;font-size:12px;color:#bcd0bf;margin-top:2px}
+  .gchip{display:inline-block;font-size:11px;border:1px dashed rgba(238,241,231,.45);border-radius:8px;padding:1px 7px;margin:3px 4px 0 0;color:#eef1e7}
+  .gtip{margin-top:16px;border-top:1px dashed rgba(238,241,231,.3);padding-top:12px;font-size:12.5px;color:#d6e6d6}
+  .gtip b{color:#f3d98a}
+  .gfoot{display:flex;align-items:center;gap:14px;margin-top:18px;flex-wrap:wrap}
+  .gbtn{font-weight:800;font-size:14px;color:#1d2c25;background:#f3d98a;border:0;padding:11px 28px;border-radius:24px;cursor:pointer;box-shadow:0 4px 0 #c9a24e;transition:.1s}
+  .gbtn:hover{filter:brightness(1.05)} .gbtn:active{transform:translateY(2px);box-shadow:0 2px 0 #c9a24e}
+  .gnever{display:flex;align-items:center;gap:7px;font-size:12px;color:#cfe0cf;cursor:pointer} .gnever input{width:15px;height:15px;accent-color:#f3d98a}
+
+  /* export modal */
+  .exoverlay{position:fixed;inset:0;z-index:70;background:rgba(8,4,7,.78);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px}
+  .exoverlay.open{display:flex}
+  .exmodal{width:min(560px,100%);background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line-g);border-radius:14px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.6)}
+  .exhead{display:flex;align-items:center;padding:14px 18px;border-bottom:1px solid var(--line);font-size:14px}
+  .exhead b{flex:1} .exhead button{background:var(--rose);color:#2a141f;border:0;width:30px;height:30px;border-radius:50%;font-size:16px;font-weight:800;cursor:pointer}
+  .exgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:16px}
+  .exbtn{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:11px;border:1px solid var(--line);background:rgba(216,178,92,.06);cursor:pointer;transition:.14s;text-align:left}
+  .exbtn:hover{background:rgba(216,178,92,.18);border-color:var(--gold-d);transform:translateY(-1px)}
+  .exbtn .exic{font-size:22px} .exbtn b{display:block;font-size:13.5px} .exbtn span{font-family:var(--mono);font-size:10.5px;color:var(--faint)}
+  .exnote{font-size:11.5px;color:var(--muted);padding:0 18px 18px;line-height:1.55}
+
+  /* PDF print */
+  #printroot{display:none}
+  @media print{
+    header.bar,.wrap,.toast,.exoverlay{display:none!important}
+    body{background:#fff!important}
+    body>#printroot{display:block!important;padding:0}
+    #printroot .md{color:#16181f;font-size:11.5pt;font-family:var(--sans)}
+    #printroot .md h1{color:#111;border-bottom:1px solid #999} #printroot .md h2{color:#111;border-bottom:1px solid #ccc} #printroot .md h3,#printroot .md h4{color:#111}
+    #printroot .md strong{color:#000} #printroot .md em{color:#7a5a00} #printroot .md a{color:#1155cc}
+    #printroot .md code{background:#f0f0f0;border:1px solid #ddd;color:#a3146e} #printroot .md pre{background:#f6f6f6;border:1px solid #ddd} #printroot .md pre code{color:#222;background:none;border:0}
+    #printroot .md blockquote{border-left:3px solid #c9a24e;background:#faf6ec;color:#555} #printroot .md th{background:#eee;color:#222} #printroot .md th,#printroot .md td{border:1px solid #999} #printroot .md hr{border-top:1px solid #bbb}
+    #printroot .md .badges img{height:18px}
+  }
+
+  @media(max-width:900px){.wrap{grid-template-columns:1fr;height:auto}.editor{border-right:0;border-bottom:1px solid var(--line-g)}.pane{height:auto;max-height:none}.preview{min-height:60vh}.exgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="bar">
+  <div class="logo">🐰</div>
+  <div class="ttl"><h1>うさうさ README ジェネレーター<span class="chip">PRO</span></h1><div class="sub">MARKDOWN README STUDIO ／ v1.5.0</div></div>
+  <div class="spacer"></div>
+  <select class="preset" id="presetSel" title="テンプレート">
+    <option value="">テンプレートを選ぶ…</option>
+    <option value="htmltool">🧩 単一HTMLツール</option>
+    <option value="library">📦 ライブラリ／パッケージ</option>
+    <option value="webapp">🌐 Webアプリ</option>
+    <option value="minimal">🪶 ミニマル</option>
+    <option value="blank">⬜ 空にする</option>
+  </select>
+  <span class="savedot" id="savedot"></span>
+  <button class="btn ghost sm" id="btnGuide">🛈 使い方</button>
+  <button class="btn ghost sm" id="btnJson">⤓ 設定JSON</button>
+  <button class="btn ghost sm" id="btnLoad">⤒ 読込</button>
+  <input type="file" id="fileLoad" class="filein" accept="application/json,.json">
+  <button class="btn rose" id="btnCopy">⧉ MDコピー</button>
+  <button class="btn" id="btnExport">📤 出力</button>
+</header>
+
+<div class="wrap">
+  <section class="pane editor" id="editor"></section>
+  <section class="pane preview" id="preview">
+    <div class="pvbar">
+      <div class="seg"><button id="tabView" class="on">👁 プレビュー</button><button id="tabRaw">📝 Markdown</button></div>
+      <span class="stat" id="stat"></span>
+    </div>
+    <div id="pvBody"></div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="gbo" id="guide"><div class="gboard gchalk">
+  <button class="gclose" id="guideClose" title="閉じる">×</button>
+  <div class="ghead"><span class="grab">🐰</span><div class="gtitle"><span class="gunder">README ジェネレーター 使い方</span></div></div>
+  <div class="gsub">入力すると、右側にREADMEがリアルタイム生成されます。完成したら📤から各形式で書き出し！（オフライン・自動保存）</div>
+  <div class="gstep"><div class="gnum">1</div><div class="gtx"><b>🪪 プロジェクト情報を書く</b><span>名前・一行説明・バージョン・ライセンス・作者。バッジもON/OFF。</span></div></div>
+  <div class="gstep"><div class="gnum">2</div><div class="gtx"><b>🧩 テンプレートを選ぶ</b><span>右上から「単一HTMLツール / ライブラリ / Webアプリ / ミニマル」を流し込み。</span></div></div>
+  <div class="gstep"><div class="gnum">3</div><div class="gtx"><b>✍️ セクションを編集・追加</b><div><span class="gchip">テキスト</span><span class="gchip">箇条書き</span><span class="gchip">コード</span><span class="gchip">表</span><span class="gchip">FAQ</span><span class="gchip">更新履歴</span><span class="gchip">📁 構成ツリー</span><span class="gchip">⚙️ 環境構築</span><span class="gchip">🌿 Git運用</span></div><span>見出し編集・▲▼並べ替え・ON/OFF・削除ができます。</span></div></div>
+  <div class="gstep"><div class="gnum">4</div><div class="gtx"><b>🕒 フッターと 📦 GitHub構成 を設定</b><span>作成日・最終更新・版・更新者（自動/手動・和暦対応）。雛形ZIP用のスタックや同梱ファイルもここで。</span></div></div>
+  <div class="gstep"><div class="gnum">5</div><div class="gtx"><b>📤 出力する</b><div><span class="gchip">Markdown</span><span class="gchip">メモ</span><span class="gchip">PDF</span><span class="gchip">CSV</span><span class="gchip">Excel</span><span class="gchip">Word</span><span class="gchip">🎁 雛形ZIP</span></div><span>または「⧉ MDコピー」でそのまま貼り付け。</span></div></div>
+  <div class="gtip">💡 <b>ヒント</b>：右側は <b>👁プレビュー / 📝Markdown</b> を切替できます。入力は自動保存。このガイドは右上 <b>🛈 使い方</b> でいつでも開けます。</div>
+  <div class="gfoot"><button class="gbtn" id="guideStart">▶ はじめる</button><span style="font-size:11.5px;color:#bcd0bf">あとで見返すときは 🛈 使い方 から</span></div>
+</div></div>
+<div id="printroot"></div>
+<div class="exoverlay" id="exModal"><div class="exmodal"><div class="exhead"><b>📤 出力形式を選択</b><button id="exClose">×</button></div><div class="exgrid" id="exGrid"></div><div class="exnote">フッター（最終更新日時・版・最終更新者）は全形式に反映されます。PDFは印刷ダイアログから「PDFとして保存」を選択。Excel(.xls)／Word(.doc)はそれぞれExcel／Wordで開けます（オフライン時はバッジ画像が表示されない場合があります）。</div></div></div>
+<input type="file" id="fileLoad2" class="filein">
+
+<script>
+/* ================= うさうさ README ジェネレーター PRO v1.0.0 ================= */
+const APP="うさうさ README ジェネレーター PRO v1.5.0";
+
+/* ---- storage (auto mode) ---- */
+function lsOk(){try{localStorage.setItem("__t","1");localStorage.removeItem("__t");return true;}catch(e){return false;}}
+const HAS_LS=lsOk();const KEY="usausa_readme_gen_v1";let mem={};
+function sget(k){if(HAS_LS){try{return localStorage.getItem(k);}catch(e){return null;}}return k in mem?mem[k]:null;}
+function sset(k,v){if(HAS_LS){try{localStorage.setItem(k,v);return;}catch(e){}}mem[k]=v;}
+
+/* ---- helpers ---- */
+const $=s=>document.querySelector(s);
+let toastT;function toast(m,err){const t=$("#toast");t.textContent=m;t.className="toast show"+(err?" err":"");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),1800);}
+function uid(){return "s"+Math.random().toString(36).slice(2,8);}
+function clamp(s){return (s||"")+"";}
+
+/* ================= MODEL ================= */
+let meta,badges,options,sections,docinfo,gh;
+function blank(){return{
+  meta:{emoji:"🐰",name:"",tagline:"",version:"v1.0.0",license:"MIT",author:"",repo:""},
+  badges:{version:true,license:true,madeWith:""},
+  options:{toc:false},
+  docinfo:{dateFormat:"iso",created:{on:false,mode:"manual",withTime:false,value:""},updated:{on:true,mode:"auto",withTime:true,value:""},version:{on:false,mode:"auto",value:""},updater:{on:false,mode:"auto",value:""}},
+  gh:{stack:"generic",includeGitignore:true,includeLicense:true,includeContributing:true,includeCI:true},
+  sections:[]
+};}
+function applyModel(m){meta=m.meta;badges=m.badges;options=m.options;docinfo=m.docinfo;gh=m.gh;sections=m.sections;}
+function currentModel(){return{meta,badges,options,docinfo,gh,sections};}
+
+/* ================= STACK DATA ================= */
+const PM_BY_STACK={python:["pip","poetry","uv","conda"],node:["npm","pnpm","yarn","bun"],html:[],generic:[]};
+function defaultPm(stack){const a=PM_BY_STACK[stack]||[];return a[0]||"";}
+const TREE_TPL={
+  python:`my-project/\n├─ src/\n│  └─ my_project/\n│     ├─ __init__.py\n│     └─ main.py\n├─ tests/\n│  └─ test_main.py\n├─ docs/\n├─ .github/\n│  └─ workflows/\n│     └─ ci.yml\n├─ .gitignore\n├─ pyproject.toml\n├─ requirements.txt\n├─ LICENSE\n└─ README.md`,
+  node:`my-app/\n├─ src/\n│  └─ index.js\n├─ public/\n├─ tests/\n│  └─ index.test.js\n├─ .github/\n│  └─ workflows/\n│     └─ ci.yml\n├─ .gitignore\n├─ package.json\n├─ LICENSE\n└─ README.md`,
+  html:`my-tool/\n├─ index.html\n├─ assets/\n│  ├─ style.css\n│  └─ app.js\n├─ docs/\n├─ .gitignore\n├─ LICENSE\n└─ README.md`,
+  generic:`project/\n├─ src/\n├─ docs/\n├─ tests/\n├─ .gitignore\n├─ LICENSE\n└─ README.md`,
+};
+
+/* ================= PRESETS ================= */
+function sec(type,title,data){return Object.assign({id:uid(),type,title,on:true},data);}
+function P_htmltool(){const m=blank();m.meta={emoji:"🐰",name:"ツール名",tagline:"一行で価値を伝えるキャッチコピー",version:"v1.0.0",license:"MIT",author:"うさうさ研修工房",repo:""};m.badges={version:true,license:true,madeWith:"vanilla_JS"};m.options={toc:false};m.gh.stack="html";
+  m.sections=[
+    sec("text","📌 これは何？",{content:"**結論**：◯◯を△△するための単一HTMLツールです。外部依存ゼロ・オフライン動作・外部送信なし。ダブルクリックで起動します。"}),
+    sec("list","✅ 主な機能",{items:["機能A：…","機能B：…","機能C：…"]}),
+    sec("olist","🚀 使い方",{items:["HTMLファイルをブラウザで開く","入力欄を埋める","出力をコピー／ダウンロード"]}),
+    sec("list","🗂 動作環境",{items:["最新の Chrome / Edge / Safari / Firefox","インターネット接続不要（オフライン）","インストール不要・単一ファイル"]}),
+    sec("tree","📁 ディレクトリ構成",{content:TREE_TPL.html}),
+    sec("setup","⚙️ 環境構築",{stack:"html",pm:"",opts:{venv:false,test:false,lint:false,docker:false},runCmd:"",extra:""}),
+    sec("git","🌿 ブランチ運用・コミットルール",{model:"github",commitStyle:"conventional",protectMain:true,extra:""}),
+    sec("faq","❓ FAQ",{items:[{q:"データはどこに保存される？",a:"お使いのブラウザ内（localStorage）に保存され、外部送信はありません。"},{q:"文字化けする",a:"UTF-8で開いてください。"}]}),
+    sec("changelog","📝 更新履歴",{items:[{ver:"v1.0.0",date:"",notes:"初版"}]}),
+    sec("text","🖋 クレジット",{content:"制作：**うさうさ研修工房**（うさうさ先生🐰）\n\n> 「面白きこともなき世を面白く」"}),
+    sec("text","📄 ライセンス",{content:"MIT License."}),
+  ];return m;}
+function P_library(){const m=blank();m.meta={emoji:"📦",name:"package-name",tagline:"What it does, in one line.",version:"1.0.0",license:"MIT",author:"",repo:"https://github.com/user/repo"};m.badges={version:true,license:true,madeWith:""};m.options={toc:true};m.gh.stack="node";
+  m.sections=[
+    sec("text","Overview",{content:"A short description of what this package does and why it exists."}),
+    sec("code","Installation",{lang:"bash",content:"npm install package-name"}),
+    sec("code","Usage",{lang:"js",content:"import { thing } from 'package-name';\n\nthing();"}),
+    sec("table","API",{columns:["Method","Description","Returns"],rows:[["thing()","Does the thing","void"]]}),
+    sec("list","Features",{items:["Zero config","TypeScript types included","Tree-shakeable"]}),
+    sec("text","Contributing",{content:"PRs welcome. Please open an issue first to discuss changes."}),
+    sec("text","License",{content:"MIT"}),
+  ];return m;}
+function P_webapp(){const m=blank();m.meta={emoji:"🌐",name:"アプリ名",tagline:"アプリの価値を一行で。",version:"v1.0.0",license:"MIT",author:"",repo:""};m.badges={version:true,license:true,madeWith:""};m.options={toc:true};m.gh.stack="node";
+  m.sections=[
+    sec("text","概要",{content:"このアプリが解決する課題と、誰のためのものかを簡潔に。"}),
+    sec("list","主な機能",{items:["機能A","機能B","機能C"]}),
+    sec("list","スクリーンショット",{items:["![スクショ1](docs/screenshot1.png)","![スクショ2](docs/screenshot2.png)"]}),
+    sec("code","セットアップ",{lang:"bash",content:"git clone <repo>\ncd app\nnpm install\nnpm run dev"}),
+    sec("table","環境変数",{columns:["変数","説明","既定値"],rows:[["API_URL","APIのベースURL","-"]]}),
+    sec("list","動作環境",{items:["Node.js 18+","モダンブラウザ"]}),
+    sec("text","ライセンス",{content:"MIT"}),
+  ];return m;}
+function P_minimal(){const m=blank();m.meta={emoji:"",name:"プロジェクト名",tagline:"一行説明",version:"",license:"MIT",author:"",repo:""};m.badges={version:false,license:true,madeWith:""};m.options={toc:false};m.gh.stack="generic";
+  m.sections=[sec("text","概要",{content:"このプロジェクトの説明。"}),sec("olist","使い方",{items:["手順1","手順2"]}),sec("text","ライセンス",{content:"MIT"})];return m;}
+
+/* ================= LOAD ================= */
+function load(){try{const r=sget(KEY);if(r){const m=JSON.parse(r);if(m&&m.meta&&m.sections){applyModel(migrate(m));return;}}}catch(e){}applyModel(P_htmltool());}
+function migrate(m){m.meta=Object.assign({emoji:"",name:"",tagline:"",version:"",license:"MIT",author:"",repo:""},m.meta||{});m.badges=Object.assign({version:true,license:true,madeWith:""},m.badges||{});if(!m.badges.custom)m.badges.custom=[];m.options=Object.assign({toc:false},m.options||{});
+  m.docinfo=m.docinfo||{};
+  if(!m.docinfo.dateFormat)m.docinfo.dateFormat="iso";
+  m.docinfo.created=Object.assign({on:false,mode:"manual",withTime:false,value:""},m.docinfo.created||{});
+  m.docinfo.updated=Object.assign({on:true,mode:"auto",withTime:true,value:""},m.docinfo.updated||{});
+  m.docinfo.version=Object.assign({on:false,mode:"auto",value:""},m.docinfo.version||{});
+  m.docinfo.updater=Object.assign({on:false,mode:"auto",value:""},m.docinfo.updater||{});
+  m.gh=Object.assign({stack:"generic",includeGitignore:true,includeLicense:true,includeContributing:true,includeCI:true},m.gh||{});
+  m.sections=(m.sections||[]).map(s=>{s.id=s.id||uid();s.on=s.on!==false;if(s.type==="list"||s.type==="olist"){if(!Array.isArray(s.items))s.items=[""];}if(s.type==="faq"){if(!Array.isArray(s.items))s.items=[{q:"",a:""}];}if(s.type==="table"){if(!Array.isArray(s.columns))s.columns=["列1","列2"];if(!Array.isArray(s.rows))s.rows=[];}if(s.type==="changelog"){if(!Array.isArray(s.items))s.items=[{ver:"",date:"",notes:""}];s.items=s.items.map(x=>({ver:x.ver||"",date:x.date||"",notes:x.notes||""}));}
+    if(s.type==="tree"){if(s.content==null)s.content="";}
+    if(s.type==="setup"){s.stack=s.stack||"python";if(s.pm==null)s.pm=defaultPm(s.stack);s.opts=Object.assign({venv:true,test:false,lint:false,docker:false},s.opts||{});if(s.runCmd==null)s.runCmd="";if(s.extra==null)s.extra="";}
+    if(s.type==="git"){s.model=s.model||"github";s.commitStyle=s.commitStyle||"conventional";if(typeof s.protectMain!=="boolean")s.protectMain=true;if(s.extra==null)s.extra="";}
+    if(s.type==="text"&&s.content==null)s.content="";if(s.type==="code"){if(s.content==null)s.content="";if(!s.lang)s.lang="";}return s;});return m;}
+function save(){sset(KEY,JSON.stringify(currentModel()));const d=$("#savedot");if(d)d.innerHTML='<i></i>'+(HAS_LS?"自動保存":"セッション保存");}
+
+/* ================= MARKDOWN BUILD ================= */
+function badgeEnc(s){return encodeURIComponent(String(s).replace(/-/g,"--").replace(/ /g,"_"));}
+function buildBadges(){const b=[];if(badges.version&&meta.version)b.push(`![version](https://img.shields.io/badge/version-${badgeEnc(meta.version)}-C9A24E)`);if(badges.license&&meta.license)b.push(`![license](https://img.shields.io/badge/license-${badgeEnc(meta.license)}-9B3D6E)`);if(badges.madeWith)b.push(`![made with](https://img.shields.io/badge/made_with-${badgeEnc(badges.madeWith)}-5cc6b8)`);(badges.custom||[]).forEach(c=>{if((c.label||"").trim()||(c.message||"").trim())b.push(`![${c.label||"badge"}](https://img.shields.io/badge/${badgeEnc(c.label||"label")}-${badgeEnc(c.message||"")}-${(c.color||"lightgrey").replace(/[^0-9a-zA-Z]/g,"")||"lightgrey"})`);});return b.join(" ");}
+function slug(t){return String(t).toLowerCase().replace(/[^\w \u3040-\u30ff\u4e00-\u9faf-]/g,"").trim().replace(/\s+/g,"-");}
+function buildToc(){const items=sections.filter(s=>s.on&&s.title.trim()).map(s=>`- [${s.title.trim()}](#${slug(s.title)})`);return items.length?"## 目次\n\n"+items.join("\n"):"";}
+function sectionBody(s){
+  if(s.type==="text")return clamp(s.content).trim();
+  if(s.type==="list"){const it=(s.items||[]).filter(x=>x.trim());return it.map(x=>"- "+x.trim()).join("\n");}
+  if(s.type==="olist"){const it=(s.items||[]).filter(x=>x.trim());return it.map((x,i)=>(i+1)+". "+x.trim()).join("\n");}
+  if(s.type==="code")return "```"+(s.lang||"")+"\n"+clamp(s.content).replace(/\s+$/,"")+"\n```";
+  if(s.type==="faq"){const it=(s.items||[]).filter(x=>(x.q||"").trim()||(x.a||"").trim());return it.map(x=>`**Q. ${(x.q||"").trim()}**  \n${(x.a||"").trim()}`).join("\n\n");}
+  if(s.type==="changelog"){const it=(s.items||[]).filter(x=>(x.ver||"").trim()||(x.date||"").trim()||(x.notes||"").trim());return it.map(x=>{const head=`### ${(x.ver||"").trim()||"（版）"}${(x.date||"").trim()?" - "+(x.date||"").trim():""}`;const lines=(x.notes||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>"- "+l.replace(/^[-*]\s*/,""));return head+(lines.length?"\n"+lines.join("\n"):"");}).join("\n\n");}
+  if(s.type==="tree"){const t=(s.content||"").replace(/\s+$/,"");return t?"```\n"+t+"\n```":"";}
+  if(s.type==="setup"){return genSetupMd(s);}
+  if(s.type==="git"){return genGitMd(s);}
+  if(s.type==="table"){const cols=s.columns||[];if(!cols.length)return "";let out="| "+cols.join(" | ")+" |\n| "+cols.map(()=>"---").join(" | ")+" |";(s.rows||[]).forEach(r=>{out+="\n| "+cols.map((_,i)=>((r[i]||"").replace(/\|/g,"\\|").replace(/\n/g,"<br>"))||" ").join(" | ")+" |";});return out;}
+  return "";
+}
+function pad2(n){return String(n).padStart(2,"0");}
+function warekiYear(d){const y=d.getFullYear(),m=d.getMonth()+1,day=d.getDate();const after=(ey,em,ed)=>(y>ey)||(y===ey&&(m>em||(m===em&&day>=ed)));let era,yy;if(after(2019,5,1)){era="令和";yy=y-2018;}else if(after(1989,1,8)){era="平成";yy=y-1988;}else if(after(1926,12,25)){era="昭和";yy=y-1925;}else{era="大正";yy=y-1911;}return era+(yy===1?"元":yy)+"年";}
+function fmtDate(d,withTime){const f=(docinfo&&docinfo.dateFormat)||"iso";const Y=d.getFullYear(),M=d.getMonth()+1,D2=d.getDate();let s;if(f==="slash")s=`${Y}/${pad2(M)}/${pad2(D2)}`;else if(f==="dot")s=`${Y}.${pad2(M)}.${pad2(D2)}`;else if(f==="jp")s=`${Y}年${M}月${D2}日`;else if(f==="wareki")s=`${warekiYear(d)}${M}月${D2}日`;else s=`${Y}-${pad2(M)}-${pad2(D2)}`;if(withTime){s+=(f==="jp"||f==="wareki")?` ${pad2(d.getHours())}時${pad2(d.getMinutes())}分`:` ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;}return s;}
+function fmtNow(withTime){return fmtDate(new Date(),withTime);}
+function footerParts(){const p=[];const di=docinfo;
+  if(di.created&&di.created.on){const v=di.created.mode==="auto"?fmtNow(di.created.withTime):(di.created.value||"").trim();if(v)p.push({k:"作成日",v});}
+  if(di.updated.on){const v=di.updated.mode==="auto"?fmtNow(di.updated.withTime):(di.updated.value||"").trim();if(v)p.push({k:"最終更新",v});}
+  if(di.version.on){const v=di.version.mode==="auto"?(meta.version||"").trim():(di.version.value||"").trim();if(v)p.push({k:"版",v});}
+  if(di.updater.on){const v=di.updater.mode==="auto"?(meta.author||"").trim():(di.updater.value||"").trim();if(v)p.push({k:"最終更新者",v});}
+  return p;}
+function buildFooter(){const p=footerParts();return p.length?"---\n\n*"+p.map(x=>x.k+": "+x.v).join(" ／ ")+"*":"";}
+function buildMd(){const B=[];const head=`# ${meta.emoji?meta.emoji+" ":""}${meta.name||"プロジェクト名"}`;B.push(head);if((meta.tagline||"").trim())B.push("> "+meta.tagline.trim().replace(/\n/g,"\n> "));const bd=buildBadges();if(bd)B.push(bd);if(options.toc){const t=buildToc();if(t)B.push(t);}B.push("---");sections.filter(s=>s.on).forEach(s=>{const body=sectionBody(s).trim();B.push("## "+(s.title||"セクション")+(body?"\n\n"+body:""));});const ft=buildFooter();if(ft)B.push(ft);return B.join("\n\n")+"\n";}
+
+/* ================= MARKDOWN RENDER (preview) ================= */
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function inlineMd(s){let t=esc(s);
+  t=t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,a,u)=>`<img alt="${a}" src="${u}">`);
+  t=t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,a,u)=>`<a href="${u}" target="_blank" rel="noopener">${a}</a>`);
+  t=t.replace(/`([^`]+)`/g,"<code>$1</code>");
+  t=t.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  t=t.replace(/(^|[^\*])\*([^*\n]+)\*/g,"$1<em>$2</em>");
+  t=t.replace(/  \n/g,"<br>");
+  return t;}
+function isBadgeLine(ln){return /^!\[[^\]]*\]\(https:\/\/img\.shields\.io/.test(ln.trim());}
+function renderMd(md){const lines=md.replace(/\r/g,"").split("\n");let h="",i=0;
+  function flushUl(buf){if(buf.length)h+="<ul>"+buf.map(x=>"<li>"+inlineMd(x)+"</li>").join("")+"</ul>";}
+  function flushOl(buf){if(buf.length)h+="<ol>"+buf.map(x=>"<li>"+inlineMd(x)+"</li>").join("")+"</ol>";}
+  while(i<lines.length){let ln=lines[i];
+    if(/^```/.test(ln)){const lang=ln.replace(/^```/,"").trim();let buf=[];i++;while(i<lines.length&&!/^```/.test(lines[i])){buf.push(lines[i]);i++;}i++;h+=`<pre><code data-lang="${esc(lang)}">${esc(buf.join("\n"))}</code></pre>`;continue;}
+    let hm=ln.match(/^(#{1,6})\s+(.*)$/);if(hm){const lv=hm[1].length;h+=`<h${lv}>${inlineMd(hm[2])}</h${lv}>`;i++;continue;}
+    if(/^\s*---\s*$/.test(ln)){h+="<hr>";i++;continue;}
+    if(/^>\s?/.test(ln)){let buf=[];while(i<lines.length&&/^>\s?/.test(lines[i])){buf.push(lines[i].replace(/^>\s?/,""));i++;}h+="<blockquote>"+buf.map(inlineMd).join("<br>")+"</blockquote>";continue;}
+    if(/^\|/.test(ln)){let rows=[];while(i<lines.length&&/^\|/.test(lines[i])){rows.push(lines[i]);i++;}const cells=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());const head=cells(rows[0]);const body=rows.slice(1).filter(r=>!/^\|[\s:|-]+\|$/.test(r));h+="<table><thead><tr>"+head.map(c=>"<th>"+inlineMd(c)+"</th>").join("")+"</tr></thead><tbody>"+body.map(r=>"<tr>"+cells(r).map(c=>"<td>"+inlineMd(c)+"</td>").join("")+"</tr>").join("")+"</tbody></table>";continue;}
+    if(/^\s*[-*+]\s+/.test(ln)){let buf=[];while(i<lines.length&&/^\s*[-*+]\s+/.test(lines[i])){buf.push(lines[i].replace(/^\s*[-*+]\s+/,""));i++;}flushUl(buf);continue;}
+    if(/^\s*\d+\.\s+/.test(ln)){let buf=[];while(i<lines.length&&/^\s*\d+\.\s+/.test(lines[i])){buf.push(lines[i].replace(/^\s*\d+\.\s+/,""));i++;}flushOl(buf);continue;}
+    if(/^\s*$/.test(ln)){i++;continue;}
+    // badge line(s): group consecutive shields images into one .badges p
+    if(isBadgeLine(ln)){let buf=[];while(i<lines.length&&isBadgeLine(lines[i])){buf.push(lines[i].trim());i++;}h+='<p class="badges">'+buf.map(inlineMd).join(" ")+"</p>";continue;}
+    h+="<p>"+inlineMd(ln)+"</p>";i++;}
+  return h;}
+
+/* ================= RENDER EDITOR ================= */
+function el(tag,cls,html){const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;}
+function refresh(){renderPreview();save();}
+function renderEditor(){const root=$("#editor");root.innerHTML="";
+  /* META CARD */
+  const mc=el("div","card");mc.appendChild(el("div","chead",'<span class="ic">🪪</span><h2>プロジェクト情報</h2>'));
+  const mb=el("div","cbody");
+  const emo=el("div","metaemoji");
+  emo.innerHTML=`<div><label class="fl">絵文字</label><input type="text" id="m_emoji" placeholder="🐰" value="${escAttr(meta.emoji)}"></div><div><label class="fl">プロジェクト名</label><input type="text" id="m_name" placeholder="ツール名" value="${escAttr(meta.name)}"></div>`;
+  mb.appendChild(emo);
+  mb.appendChild(el("div","",`<label class="fl">タグライン（一行説明）</label><input type="text" id="m_tag" placeholder="一行で価値を伝える" value="${escAttr(meta.tagline)}">`));
+  const g3=el("div","grid3");g3.innerHTML=`<div><label class="fl">バージョン</label><input type="text" id="m_ver" value="${escAttr(meta.version)}"></div><div><label class="fl">ライセンス</label><input type="text" id="m_lic" value="${escAttr(meta.license)}"></div><div><label class="fl">作者</label><input type="text" id="m_auth" value="${escAttr(meta.author)}"></div>`;mb.appendChild(g3);
+  mb.appendChild(el("div","",`<label class="fl">リポジトリ / サイトURL（任意）</label><input type="text" id="m_repo" placeholder="https://…" value="${escAttr(meta.repo)}">`));
+  mb.appendChild(el("div","",`<label class="fl">バッジ</label>`));
+  const bg=el("div","badgegrid");
+  bg.innerHTML=`<label><input type="checkbox" id="b_ver" ${badges.version?"checked":""}> version</label><label><input type="checkbox" id="b_lic" ${badges.license?"checked":""}> license</label><label style="gap:6px">made with <input type="text" id="b_made" placeholder="vanilla_JS" value="${escAttr(badges.madeWith)}" style="width:120px;padding:5px 8px"></label>`;
+  mb.appendChild(bg);
+  const op=el("div","opts");op.innerHTML=`<label class="badgegrid" style="display:flex;gap:7px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer"><input type="checkbox" id="o_toc" ${options.toc?"checked":""}> 目次（TOC）を自動生成</label>`;mb.appendChild(op);
+  mc.appendChild(mb);root.appendChild(mc);
+
+  /* DOC INFO */
+  root.appendChild(renderDocInfo());
+
+  /* GITHUB / REPO */
+  root.appendChild(renderRepoCard());
+
+  /* SECTIONS */
+  sections.forEach((s,idx)=>root.appendChild(renderSection(s,idx)));
+
+  /* ADD SECTION */
+  const add=el("div","card");add.appendChild(el("div","chead",'<span class="ic">➕</span><h2>セクションを追加</h2>'));
+  const ab=el("div","cbody");const grid=el("div","addsec");
+  [["text","📝 テキスト"],["list","• 箇条書き"],["olist","1. 番号リスト"],["code","</> コード"],["table","▦ 表"],["faq","❓ FAQ"],["changelog","🗒 更新履歴"],["tree","📁 構成ツリー"],["setup","⚙️ 環境構築"],["git","🌿 Git運用"]].forEach(([t,lbl])=>{const b=el("button",null,lbl);b.onclick=()=>{addSection(t);};grid.appendChild(b);});
+  ab.appendChild(grid);add.appendChild(ab);root.appendChild(add);
+
+  wireMeta();
+}
+function escAttr(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");}
+
+function renderSection(s,idx){const c=el("div","card");
+  const head=el("div","sectionhead");
+  const mv=el("div","mv");
+  const up=el("button","iconbtn sm2","▲");up.title="上へ";up.onclick=()=>moveSec(idx,-1);
+  const dn=el("button","iconbtn sm2","▼");dn.title="下へ";dn.onclick=()=>moveSec(idx,1);
+  mv.appendChild(up);mv.appendChild(dn);head.appendChild(mv);
+  const ti=el("input","title");ti.type="text";ti.value=s.title;ti.placeholder="セクション見出し";ti.oninput=e=>{s.title=e.target.value;refresh();};head.appendChild(ti);
+  head.appendChild(el("span","typetag",typeLabel(s.type)));
+  const tg=el("label","toggle");tg.innerHTML=`<input type="checkbox" ${s.on?"checked":""}><span class="tk"></span>`;tg.querySelector("input").onchange=e=>{s.on=e.target.checked;refresh();};head.appendChild(tg);
+  const dl=el("button","iconbtn","🗑");dl.title="削除";dl.onclick=()=>{if(confirm("このセクションを削除しますか？")){sections.splice(idx,1);renderEditor();refresh();}};head.appendChild(dl);
+  c.appendChild(head);
+  const body=el("div","cbody");
+  body.appendChild(sectionEditor(s));
+  c.appendChild(body);
+  if(!s.on)c.style.opacity=".55";
+  return c;
+}
+function typeLabel(t){return{text:"TEXT",list:"LIST",olist:"OL",code:"CODE",table:"TABLE",faq:"FAQ",changelog:"LOG",tree:"DIR",setup:"SETUP",git:"GIT"}[t]||t;}
+
+function sectionEditor(s){
+  if(s.type==="text"){const ta=el("textarea");ta.placeholder="Markdownで記述（**太字** `コード` [link](url) など）";ta.value=clamp(s.content);ta.oninput=e=>{s.content=e.target.value;refresh();};return ta;}
+  if(s.type==="code"){const wrap=el("div");wrap.innerHTML=`<label class="fl">言語</label>`;const li=el("input");li.type="text";li.placeholder="bash / js / python …";li.value=s.lang||"";li.oninput=e=>{s.lang=e.target.value;refresh();};wrap.appendChild(li);const ta=el("textarea","code");ta.style.marginTop="8px";ta.placeholder="コードをそのまま貼り付け";ta.value=clamp(s.content);ta.oninput=e=>{s.content=e.target.value;refresh();};wrap.appendChild(ta);return wrap;}
+  if(s.type==="list"||s.type==="olist"){return listEditor(s);}
+  if(s.type==="faq"){return faqEditor(s);}
+  if(s.type==="changelog"){return changelogEditor(s);}
+  if(s.type==="tree"){return treeEditor(s);}
+  if(s.type==="setup"){return setupEditor(s);}
+  if(s.type==="git"){return gitEditor(s);}
+  if(s.type==="table"){return tableEditor(s);}
+  return el("div");
+}
+function listEditor(s){const wrap=el("div");const rows=el("div");(s.items||[""]).forEach((v,i)=>{const r=el("div","rowx");r.innerHTML=`<div class="idx">${s.type==="olist"?(i+1)+".":"•"}</div>`;const inp=el("input");inp.type="text";inp.value=v;inp.placeholder="項目";inp.oninput=e=>{s.items[i]=e.target.value;refresh();};const x=el("button","del","×");x.onclick=()=>{s.items.splice(i,1);if(!s.items.length)s.items.push("");renderEditor();refresh();};r.appendChild(inp);r.appendChild(x);rows.appendChild(r);});wrap.appendChild(rows);const add=el("button","addrow","＋ 行を追加");add.onclick=()=>{s.items.push("");renderEditor();refresh();};wrap.appendChild(add);return wrap;}
+function faqEditor(s){const wrap=el("div");(s.items||[]).forEach((it,i)=>{const box=el("div","faqitem");const q=el("input");q.type="text";q.placeholder="質問 Q";q.value=it.q||"";q.oninput=e=>{it.q=e.target.value;refresh();};const a=el("textarea");a.placeholder="回答 A";a.style.marginTop="7px";a.value=it.a||"";a.oninput=e=>{it.a=e.target.value;refresh();};const x=el("button","del","× この質問を削除");x.style.width="auto";x.style.height="auto";x.style.padding="6px 10px";x.style.marginTop="7px";x.onclick=()=>{s.items.splice(i,1);renderEditor();refresh();};box.appendChild(q);box.appendChild(a);box.appendChild(x);wrap.appendChild(box);});const add=el("button","addrow","＋ 質問を追加");add.onclick=()=>{s.items.push({q:"",a:""});renderEditor();refresh();};wrap.appendChild(add);return wrap;}
+function changelogEditor(s){const wrap=el("div");(s.items||[]).forEach((it,i)=>{const box=el("div","faqitem");const top=el("div");top.style.cssText="display:flex;gap:8px;flex-wrap:wrap";const ver=el("input");ver.type="text";ver.placeholder="版（例 v1.0.0）";ver.style.cssText="flex:1;min-width:120px";ver.value=it.ver||"";ver.oninput=e=>{it.ver=e.target.value;refresh();};const dt=el("input");dt.type="text";dt.placeholder="日付";dt.style.cssText="flex:1;min-width:120px";dt.value=it.date||"";dt.oninput=e=>{it.date=e.target.value;refresh();};const today=el("button","iconbtn","📅");today.title="今日（選択中フォーマット）を入れる";today.style.cssText="width:auto;padding:0 11px";today.onclick=()=>{it.date=fmtNow(false);renderEditor();refresh();};top.appendChild(ver);top.appendChild(dt);top.appendChild(today);box.appendChild(top);const notes=el("textarea");notes.placeholder="変更点（改行で複数。先頭の - は不要）";notes.style.marginTop="7px";notes.value=it.notes||"";notes.oninput=e=>{it.notes=e.target.value;refresh();};box.appendChild(notes);const x=el("button","del","× この版を削除");x.style.cssText="width:auto;height:auto;padding:6px 10px;margin-top:7px";x.onclick=()=>{s.items.splice(i,1);renderEditor();refresh();};box.appendChild(x);wrap.appendChild(box);});const add=el("button","addrow","＋ 版を追加（先頭）");add.onclick=()=>{s.items.unshift({ver:"",date:"",notes:""});renderEditor();refresh();};wrap.appendChild(add);return wrap;}
+function tableEditor(s){const wrap=el("div");const tbl=el("table","ttable");
+  const thead=el("thead");const htr=el("tr");(s.columns||[]).forEach((c,ci)=>{const th=el("th");const inp=el("input");inp.type="text";inp.value=c;inp.placeholder="列名";inp.oninput=e=>{s.columns[ci]=e.target.value;refresh();};th.appendChild(inp);htr.appendChild(th);});const thx=el("th");thx.style.width="30px";htr.appendChild(thx);thead.appendChild(htr);tbl.appendChild(thead);
+  const tb=el("tbody");(s.rows||[]).forEach((row,ri)=>{const tr=el("tr");(s.columns||[]).forEach((_,ci)=>{const td=el("td");const inp=el("input");inp.type="text";inp.value=row[ci]||"";inp.oninput=e=>{row[ci]=e.target.value;refresh();};td.appendChild(inp);tr.appendChild(td);});const tdx=el("td");const x=el("button","iconbtn","×");x.onclick=()=>{s.rows.splice(ri,1);renderEditor();refresh();};tdx.appendChild(x);tr.appendChild(tdx);tb.appendChild(tr);});tbl.appendChild(tb);wrap.appendChild(tbl);
+  const btns=el("div","tbtns");const ar=el("button","addrow","＋ 行");ar.onclick=()=>{s.rows.push(new Array((s.columns||[]).length).fill(""));renderEditor();refresh();};const ac=el("button","addrow","＋ 列");ac.style.background="var(--gold)";ac.onclick=()=>{s.columns.push("列"+((s.columns||[]).length+1));s.rows.forEach(r=>r.push(""));renderEditor();refresh();};const rc=el("button","del","－ 列");rc.style.width="auto";rc.style.height="auto";rc.style.padding="7px 12px";rc.onclick=()=>{if((s.columns||[]).length>1){s.columns.pop();s.rows.forEach(r=>r.pop());renderEditor();refresh();}};btns.appendChild(ar);btns.appendChild(ac);btns.appendChild(rc);wrap.appendChild(btns);return wrap;}
+
+function moveSec(i,d){const j=i+d;if(j<0||j>=sections.length)return;const t=sections[i];sections[i]=sections[j];sections[j]=t;renderEditor();refresh();}
+function addSection(type){const titles={text:"新しいセクション",list:"箇条書き",olist:"手順",code:"コード",table:"表",faq:"FAQ",changelog:"📝 更新履歴",tree:"📁 ディレクトリ構成",setup:"⚙️ 環境構築",git:"🌿 ブランチ運用・コミットルール"};const base={type,title:titles[type]||"セクション",id:uid(),on:true};if(type==="list"||type==="olist")base.items=[""];if(type==="faq")base.items=[{q:"",a:""}];if(type==="changelog")base.items=[{ver:"",date:"",notes:""}];if(type==="code"){base.lang="";base.content="";}if(type==="text")base.content="";if(type==="tree")base.content=TREE_TPL[(gh&&gh.stack)||"generic"]||TREE_TPL.generic;if(type==="setup"){const st=(gh&&gh.stack)||"python";base.stack=st;base.pm=defaultPm(st);base.opts={venv:st==="python",test:false,lint:false,docker:false};base.runCmd="";base.extra="";}if(type==="git"){base.model="github";base.commitStyle="conventional";base.protectMain=true;base.extra="";}if(type==="table"){base.columns=["列1","列2"];base.rows=[["",""]];}sections.push(base);renderEditor();refresh();const ed=$("#editor");if(ed.scrollTo)ed.scrollTo({top:ed.scrollHeight,behavior:"smooth"});else ed.scrollTop=ed.scrollHeight;}
+
+function wireMeta(){
+  const bind=(id,fn)=>{const e=$("#"+id);if(e)e.oninput=ev=>{fn(ev.target.value);refresh();};};
+  bind("m_emoji",v=>meta.emoji=v);bind("m_name",v=>meta.name=v);bind("m_tag",v=>meta.tagline=v);bind("m_ver",v=>meta.version=v);bind("m_lic",v=>meta.license=v);bind("m_auth",v=>meta.author=v);bind("m_repo",v=>meta.repo=v);bind("b_made",v=>badges.madeWith=v);
+  const ck=(id,fn)=>{const e=$("#"+id);if(e)e.onchange=ev=>{fn(ev.target.checked);refresh();};};
+  ck("b_ver",v=>badges.version=v);ck("b_lic",v=>badges.license=v);ck("o_toc",v=>options.toc=v);
+}
+
+/* ================= PREVIEW ================= */
+let pvTab="view";
+function renderPreview(){const md=buildMd();const body=$("#pvBody");if(pvTab==="view"){body.innerHTML='<div class="md">'+renderMd(md)+"</div>";}else{body.innerHTML='<div class="rawmd"></div>';body.querySelector(".rawmd").textContent=md;}
+  const words=md.replace(/\s+/g," ").trim();const wc=words?words.length:0;$("#stat").textContent=`${sections.filter(s=>s.on).length} セクション ／ ${wc} 文字`;}
+$("#tabView").onclick=()=>{pvTab="view";$("#tabView").classList.add("on");$("#tabRaw").classList.remove("on");renderPreview();};
+$("#tabRaw").onclick=()=>{pvTab="raw";$("#tabRaw").classList.add("on");$("#tabView").classList.remove("on");renderPreview();};
+
+/* ================= ACTIONS ================= */
+function copyText(t){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(()=>toast("Markdownをコピーしました"),()=>fbc(t));}else fbc(t);}
+function fbc(t){try{const a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();document.execCommand("copy");document.body.removeChild(a);toast("Markdownをコピーしました");}catch(e){toast("コピー失敗",true);}}
+function download(n,t,m){try{const b=(t instanceof Uint8Array)?new Blob([t],{type:m||"application/octet-stream"}):new Blob([t],{type:m||"text/markdown;charset=utf-8"});const u=URL.createObjectURL(b);const a=document.createElement("a");a.href=u;a.download=n;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(u),1500);}catch(e){toast("ダウンロード失敗",true);}}
+$("#btnCopy").onclick=()=>copyText(buildMd());
+$("#btnJson").onclick=()=>{download((meta.name?meta.name.replace(/\s+/g,"_"):"readme")+"_config.json",JSON.stringify(currentModel(),null,2),"application/json");toast("設定JSONを保存しました");};
+$("#btnLoad").onclick=()=>$("#fileLoad").click();
+$("#fileLoad").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const m=JSON.parse(r.result);applyModel(migrate(m));renderEditor();refresh();toast("設定を読み込みました");}catch(err){toast("読み込み失敗：JSON形式を確認",true);}e.target.value="";};r.readAsText(f);};
+$("#presetSel").onchange=e=>{const v=e.target.value;if(!v){return;}if(!confirm("テンプレートを適用すると現在の内容が置き換わります。よろしいですか？")){e.target.value="";return;}const map={htmltool:P_htmltool,library:P_library,webapp:P_webapp,minimal:P_minimal,blank:()=>{const m=blank();m.sections=[sec("text","概要",{content:""})];return m;}};applyModel(migrate(map[v]()));renderEditor();refresh();e.target.value="";toast("テンプレートを適用しました");};
+
+/* ================= MULTI-FORMAT EXPORT ================= */
+function safeName(){return (meta.name?meta.name.replace(/[\\/:*?"<>|]/g,"").replace(/\s+/g,"_"):"README")||"README";}
+function mdToPlain(md){return md
+  .replace(/```[^\n]*\n([\s\S]*?)```/g,(m,c)=>c.replace(/\s+$/,""))
+  .replace(/^######\s+(.*)$/gm,"$1").replace(/^#####\s+(.*)$/gm,"$1").replace(/^####\s+(.*)$/gm,"  - $1")
+  .replace(/^###\s+(.*)$/gm,"■ $1").replace(/^##\s+(.*)$/gm,"◆ $1").replace(/^#\s+(.*)$/gm,"【$1】")
+  .replace(/^>\s?/gm,"  ")
+  .replace(/!\[([^\]]*)\]\(([^)]+)\)/g,"[画像:$1 $2]")
+  .replace(/\[([^\]]+)\]\(([^)]+)\)/g,"$1（$2）")
+  .replace(/\*\*([^*]+)\*\*/g,"$1").replace(/(^|[^*])\*([^*\n]+)\*/g,"$1$2").replace(/`([^`]+)`/g,"$1")
+  .replace(/^\|(.+)\|$/gm,(m,row)=>row.split("|").map(x=>x.trim()).join("｜"))
+  .replace(/^\s*[-*+]\s+/gm,"・").replace(/^\s*(\d+)\.\s+/gm,"$1. ")
+  .replace(/^---$/gm,"--------------------------------");}
+function docRows(){const rows=[["セクション","内容"]];rows.push(["（タイトル）",(meta.emoji?meta.emoji+" ":"")+(meta.name||"")]);if((meta.tagline||"").trim())rows.push(["（タグライン）",meta.tagline.trim()]);sections.filter(s=>s.on).forEach(s=>rows.push([s.title||"セクション",sectionBody(s)]));footerParts().forEach(p=>rows.push(["（"+p.k+"）",p.v]));return rows;}
+function csvCell(s){s=String(s==null?"":s);if(/[",\n\r]/.test(s))s='"'+s.replace(/"/g,'""')+'"';return s;}
+function buildCsv(){return "\uFEFF"+docRows().map(r=>r.map(csvCell).join(",")).join("\r\n");}
+function xmlEsc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\r\n|\r|\n/g,"&#10;");}
+/* ---- 本物の .xlsx（CRC32 + ZIP store, 依存ゼロ） ---- */
+let CRC_TABLE;
+function crcTable(){if(CRC_TABLE)return CRC_TABLE;const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=(c&1)?(0xEDB88320^(c>>>1)):(c>>>1);t[n]=c>>>0;}return CRC_TABLE=t;}
+function crc32(bytes){const t=crcTable();let c=0xFFFFFFFF;for(let i=0;i<bytes.length;i++)c=t[(c^bytes[i])&0xFF]^(c>>>8);return (c^0xFFFFFFFF)>>>0;}
+function zipStore(files){const enc=new TextEncoder();const u16=v=>[v&0xff,(v>>>8)&0xff];const u32=v=>[v&0xff,(v>>>8)&0xff,(v>>>16)&0xff,(v>>>24)&0xff];const parts=[],central=[];let offset=0;
+  files.forEach(f=>{const nameBytes=enc.encode(f.name);const data=enc.encode(f.str);const crc=crc32(data);
+    const local=[].concat(u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0));
+    parts.push(Uint8Array.from(local),nameBytes,data);
+    const cen=[].concat(u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset));
+    central.push({h:Uint8Array.from(cen),n:nameBytes});
+    offset+=local.length+nameBytes.length+data.length;});
+  const cdParts=[];let cdSize=0;central.forEach(c=>{cdParts.push(c.h,c.n);cdSize+=c.h.length+c.n.length;});
+  const end=Uint8Array.from([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cdSize),u32(offset),u16(0)));
+  const all=parts.concat(cdParts,[end]);let total=0;all.forEach(a=>total+=a.length);const out=new Uint8Array(total);let p=0;all.forEach(a=>{out.set(a,p);p+=a.length;});return out;}
+function colLetter(n){let s="";n++;while(n>0){const m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=Math.floor((n-1)/26);}return s;}
+function sheetXml(rows){let body="";rows.forEach((r,ri)=>{const cells=r.map((v,ci)=>{const ref=colLetter(ci)+(ri+1);const st=ri===0?' s="1"':' s="2"';return `<c r="${ref}"${st} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;}).join("");body+=`<row r="${ri+1}">${cells}</row>`;});return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><cols><col min="1" max="1" width="24" customWidth="1"/><col min="2" max="2" width="90" customWidth="1"/></cols><sheetData>${body}</sheetData></worksheet>`;}
+function buildXlsx(){const rows=docRows();const files=[
+  {name:"[Content_Types].xml",str:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>`},
+  {name:"_rels/.rels",str:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+  {name:"xl/workbook.xml",str:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="README" sheetId="1" r:id="rId1"/></sheets></workbook>`},
+  {name:"xl/_rels/workbook.xml.rels",str:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>`},
+  {name:"xl/styles.xml",str:`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="3"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill><fill><patternFill patternType="solid"><fgColor rgb="FFF3E6C8"/></patternFill></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0" applyAlignment="1"><alignment wrapText="1" vertical="top"/></xf></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>`},
+  {name:"xl/worksheets/sheet1.xml",str:sheetXml(rows)},
+];return zipStore(files);}
+function buildDoc(){const body=renderMd(buildMd());return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>${xmlEsc(meta.name||"README")}</title><style>body{font-family:'Yu Gothic','Meiryo',sans-serif;font-size:11pt;color:#222;line-height:1.6}h1{font-size:20pt;border-bottom:1px solid #999}h2{font-size:15pt;border-bottom:1px solid #ccc}h3{font-size:13pt}code{font-family:Consolas,monospace;background:#f3f3f3}pre{font-family:Consolas,monospace;background:#f5f5f5;border:1px solid #ddd;padding:8px}table{border-collapse:collapse}th,td{border:1px solid #999;padding:4px 8px}th{background:#eee}blockquote{border-left:3px solid #c9a24e;margin:0;padding:4px 12px;color:#555}</style></head><body>${body}</body></html>`;}
+function exportPDF(){try{$("#printroot").innerHTML='<div class="md">'+renderMd(buildMd())+"</div>";document.body.classList.add("printing");window.print();}catch(e){toast("PDF出力に失敗",true);document.body.classList.remove("printing");}}
+window.addEventListener("afterprint",()=>document.body.classList.remove("printing"));
+
+function renderExGrid(){const g=$("#exGrid");const fmts=[["md","📄","Markdown",".md"],["txt","📝","メモ／テキスト",".txt"],["pdf","🧾","PDF","印刷→保存"],["csv","📊","CSV",".csv"],["xlsx","📗","Excel",".xlsx"],["doc","📘","Word",".doc"],["zip","🎁","プロジェクト雛形","GitHub一式 .zip"]];g.innerHTML="";fmts.forEach(([f,ic,nm,ext])=>{const b=el("button","exbtn");b.innerHTML=`<div class="exic">${ic}</div><div><b>${nm}</b><span>${ext}</span></div>`;b.onclick=()=>doExport(f);g.appendChild(b);});}
+function openExport(){renderExGrid();$("#exModal").classList.add("open");}
+function closeExport(){$("#exModal").classList.remove("open");}
+function doExport(fmt){try{const base=safeName();
+  if(fmt==="md"){download("README.md",buildMd());toast("README.md を保存しました");}
+  else if(fmt==="txt"){download(base+".txt",mdToPlain(buildMd()),"text/plain;charset=utf-8");toast("メモ(.txt)を保存しました");}
+  else if(fmt==="csv"){download(base+".csv",buildCsv(),"text/csv;charset=utf-8");toast("CSVを保存しました");}
+  else if(fmt==="xlsx"){download(base+".xlsx",buildXlsx(),"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");toast("Excel(.xlsx)を保存しました");}
+  else if(fmt==="doc"){download(base+".doc",buildDoc(),"application/msword");toast("Word(.doc)を保存しました");}
+  else if(fmt==="pdf"){closeExport();setTimeout(exportPDF,120);return;}
+  else if(fmt==="zip"){const z=zipStore(buildStarterFiles());download(safeName()+"_starter.zip",z,"application/zip");toast("プロジェクト雛形(.zip)を保存しました");}
+  closeExport();
+}catch(e){toast("出力に失敗",true);}}
+$("#btnExport").onclick=openExport;
+$("#exClose").onclick=closeExport;
+$("#exModal").onclick=e=>{if(e.target.id==="exModal")closeExport();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){closeExport();closeGuide();}});
+
+/* ---- 黒板 使い方ガイド ---- */
+const SEEN=KEY+"_guide_seen";
+function openGuide(){$("#guide").classList.add("open");}
+function closeGuide(){$("#guide").classList.remove("open");sset(SEEN,"1");}
+$("#btnGuide").onclick=openGuide;
+$("#guideClose").onclick=closeGuide;
+$("#guideStart").onclick=closeGuide;
+$("#guide").onclick=e=>{if(e.target.id==="guide")closeGuide();};
+function maybeShowGuideOnFirstUse(){if(sget(SEEN)!=="1")openGuide();}
+
+/* ================= DOC INFO CARD ================= */
+function renderDocInfo(){const c=el("div","card");c.appendChild(el("div","chead",'<span class="ic">🕒</span><h2>ドキュメント情報（フッター）</h2>'));const b=el("div","cbody");
+  const fmtRow=el("div");fmtRow.style.cssText="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:0 0 10px";fmtRow.innerHTML='<div style="font-size:12.5px;font-weight:700;min-width:96px">日時フォーマット</div>';const sel=el("select","preset");sel.style.cssText="padding:7px 10px";sel.innerHTML=`<option value="iso">2026-06-15（ハイフン）</option><option value="slash">2026/06/15（スラッシュ）</option><option value="dot">2026.06.15（ドット）</option><option value="jp">2026年6月15日（和風）</option><option value="wareki">令和8年6月15日（和暦）</option>`;sel.value=docinfo.dateFormat||"iso";sel.onchange=e=>{docinfo.dateFormat=e.target.value;renderEditor();refresh();};fmtRow.appendChild(sel);const ex=el("div");ex.style.cssText="font-family:var(--mono);font-size:11px;color:var(--teal)";ex.textContent="例 → "+fmtNow(true);fmtRow.appendChild(ex);b.appendChild(fmtRow);
+  b.appendChild(diRow("created","作成日",true));b.appendChild(diRow("updated","最終更新日時",true));b.appendChild(diRow("version","バージョン",false));b.appendChild(diRow("updater","最終更新者",false));
+  const note=el("div");note.style.cssText="font-size:11px;color:var(--faint);margin-top:10px;line-height:1.55";note.textContent="日時フォーマットは「自動」の日付に適用（和暦対応）。自動＝書き出し時の値／手動＝入力値で固定。ONの項目はフッターとして全形式に出力されます。";b.appendChild(note);c.appendChild(b);return c;}
+function diRow(key,label,hasTime){const di=docinfo[key];const wrap=el("div");wrap.style.cssText="display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)";
+  const tg=el("label","toggle");tg.innerHTML=`<input type="checkbox" ${di.on?"checked":""}><span class="tk"></span>`;tg.querySelector("input").onchange=e=>{di.on=e.target.checked;renderEditor();refresh();};wrap.appendChild(tg);
+  const lab=el("div");lab.style.cssText="font-size:12.5px;font-weight:700;min-width:96px";lab.textContent=label;wrap.appendChild(lab);
+  if(di.on){const seg=el("div","seg");seg.innerHTML=`<button data-m="auto" class="${di.mode==='auto'?'on':''}">自動</button><button data-m="manual" class="${di.mode==='manual'?'on':''}">手動</button>`;seg.querySelectorAll("button").forEach(btn=>btn.onclick=()=>{di.mode=btn.dataset.m;renderEditor();refresh();});wrap.appendChild(seg);
+    if(di.mode==="manual"){const inp=el("input");inp.type="text";inp.style.cssText="flex:1;min-width:160px";inp.placeholder=(key==="updated"||key==="created")?"例）2026-06-15 12:00":key==="version"?"例）v1.0.0":"氏名／役職名";inp.value=di.value||"";inp.oninput=e=>{di.value=e.target.value;refresh();};wrap.appendChild(inp);}
+    else{const pv=el("div");pv.style.cssText="font-family:var(--mono);font-size:11.5px;color:var(--teal)";const v=(key==="updated"||key==="created")?fmtNow(di.withTime):key==="version"?(meta.version||"（未設定）"):(meta.author||"（作者未設定）");pv.textContent="→ "+v;wrap.appendChild(pv);
+      if(hasTime){const sel=el("select");sel.className="preset";sel.style.cssText="padding:6px 10px";sel.innerHTML=`<option value="1" ${di.withTime?"selected":""}>日付＋時刻</option><option value="0" ${!di.withTime?"selected":""}>日付のみ</option>`;sel.onchange=e=>{di.withTime=e.target.value==="1";renderEditor();refresh();};wrap.appendChild(sel);}}}
+  return wrap;}
+
+/* ================= GITHUB / SETUP GENERATORS ================= */
+function moduleName(){return (meta.name?meta.name.replace(/[^\w]/g,"_").toLowerCase():"")||"your_module";}
+function genSetupMd(s){const stack=s.stack||"python",pm=s.pm||"",opts=s.opts||{},run=(s.runCmd||"").trim(),extra=(s.extra||"").trim();const B=[];
+  if(stack==="python"){B.push("### 前提");B.push("- Python 3.10+ がインストールされていること");const setup=[];
+    if(opts.venv){setup.push("# 仮想環境を作成して有効化");setup.push("python -m venv .venv");setup.push("# Windows (PowerShell): .venv\\Scripts\\Activate.ps1");setup.push("source .venv/bin/activate");setup.push("");}
+    setup.push("# 依存関係のインストール");
+    if(pm==="poetry")setup.push("poetry install");else if(pm==="uv")setup.push("uv pip install -r requirements.txt");else if(pm==="conda"){setup.push("conda env create -f environment.yml");setup.push("conda activate myenv");}else setup.push("pip install -r requirements.txt");
+    B.push("### セットアップ手順\n```bash\n"+setup.join("\n").trim()+"\n```");
+    B.push("### 実行\n```bash\n"+(run||"python -m "+moduleName())+"\n```");
+    const ck=[];if(opts.test)ck.push("pytest");if(opts.lint)ck.push("ruff check .");if(ck.length)B.push("### テスト・静的解析\n```bash\n"+ck.join("\n")+"\n```");
+  }else if(stack==="node"){const p=pm||"npm";B.push("### 前提");B.push("- Node.js 18+ がインストールされていること");
+    const inst=p==="yarn"?"yarn":(p==="pnpm"?"pnpm install":(p==="bun"?"bun install":"npm install"));
+    B.push("### セットアップ手順\n```bash\n# 依存関係のインストール\n"+inst+"\n```");
+    B.push("### 実行\n```bash\n"+(run||(p==="npm"?"npm run dev":p+" dev"))+"\n```");
+    const ck=[];if(opts.test)ck.push(p==="npm"?"npm test":p+" test");if(opts.lint)ck.push(p==="npm"?"npm run lint":p+" lint");if(ck.length)B.push("### テスト・静的解析\n```bash\n"+ck.join("\n")+"\n```");
+  }else if(stack==="html"){B.push("### セットアップ手順");B.push("ビルド不要。`index.html` をブラウザで開くだけで動作します（外部依存なし）。");B.push("ローカルサーバーで配信する場合：\n```bash\n# Python 標準のHTTPサーバー\npython -m http.server 8000\n# → http://localhost:8000 を開く\n```");if(run)B.push("### 実行\n```bash\n"+run+"\n```");
+  }else{B.push("### セットアップ手順");B.push(extra||"（環境構築手順を記載してください）");}
+  if(opts.docker)B.push("### Docker で動かす\n```bash\ndocker build -t "+safeName().toLowerCase()+" .\ndocker run --rm -it "+safeName().toLowerCase()+"\n```");
+  if(extra&&stack!=="generic")B.push("### 補足\n"+extra);
+  return B.join("\n\n");}
+
+/* ---- Git運用ルール（ブランチ役割・更新フロー・コミット規約） ---- */
+const GIT_MODELS={
+  github:{name:"GitHub Flow（シンプル・推奨）",base:"main",work:"feature/your-task",rows:[["main","常にデプロイ可能な安定版。直接pushは禁止","-","-"],["feature/*","機能追加・修正（例: feature/login）","main","main（PR経由）"]]},
+  gitflow:{name:"Git Flow",base:"develop",work:"feature/your-task",rows:[["main","本番リリース済みの安定版","-","-"],["develop","次期リリースの統合先","main","main（release経由）"],["feature/*","機能開発","develop","develop"],["release/*","リリース準備（調整・バグ修正）","develop","main / develop"],["hotfix/*","本番の緊急修正","main","main / develop"]]},
+  trunk:{name:"トランクベース開発",base:"main",work:"feature/your-task",rows:[["main","唯一の長期ブランチ。常にビルド可能","-","-"],["feature/*","ごく短命（1〜2日）の作業ブランチ","main","main（小さく頻繁にPR）"]]},
+  simple:{name:"シンプル運用",base:"main",work:"work/your-task",rows:[["main","安定版","-","-"],["work/*","作業用ブランチ","main","main"]]},
+};
+const COMMIT_STYLES={
+  conventional:{fmt:"`<type>(<scope>): <要約>`（例: `feat(auth): ログイン機能を追加`）",ex:"feat: 〇〇を追加",head:["type","用途"],rows:[["feat","新機能"],["fix","バグ修正"],["docs","ドキュメント"],["style","整形（動作に影響なし）"],["refactor","リファクタリング"],["perf","パフォーマンス改善"],["test","テスト追加・修正"],["build","ビルド・依存関係"],["ci","CI設定"],["chore","雑務・その他"],["revert","変更の取り消し"]]},
+  gitmoji:{fmt:"`<emoji> 要約`（例: `✨ ログイン機能を追加`）",ex:"✨ 〇〇を追加",head:["絵文字","用途"],rows:[["✨","新機能"],["🐛","バグ修正"],["📝","ドキュメント"],["♻️","リファクタリング"],["✅","テスト"],["⚡️","パフォーマンス"],["🔧","設定変更"],["🚀","デプロイ"]]},
+  simple:{fmt:"動詞始まりで簡潔に（例: `ログイン機能を追加`）",ex:"〇〇を追加",head:["接頭辞","用途"],rows:[["追加","機能・ファイルの追加"],["修正","バグ・不具合の修正"],["変更","仕様・挙動の変更"],["削除","不要なものの削除"],["整理","リファクタ・整形"],["文書","ドキュメント"]]},
+};
+function mdTable(head,rows){return "| "+head.join(" | ")+" |\n| "+head.map(()=>"---").join(" | ")+" |\n"+rows.map(r=>"| "+r.join(" | ")+" |").join("\n");}
+function genGitMd(s){const m=GIT_MODELS[s.model||"github"]||GIT_MODELS.github;const cs=COMMIT_STYLES[s.commitStyle||"conventional"]||COMMIT_STYLES.conventional;const protect=s.protectMain!==false;const extra=(s.extra||"").trim();const B=[];
+  B.push("### ブランチ構成と役割");
+  B.push("**運用モデル："+m.name+"**");
+  B.push(mdTable(["ブランチ","役割","派生元","マージ先"],m.rows));
+  B.push("### 更新の流れ");
+  const cmds=["# 最新を取得","git switch "+m.base,"git pull origin "+m.base,"","# 作業ブランチを作成","git switch -c "+m.work,"","# 変更をコミット","git add .","git commit -m \""+cs.ex+"\"","","# プッシュして Pull Request を作成","git push -u origin "+m.work];
+  B.push("```bash\n"+cmds.join("\n")+"\n```");
+  B.push("レビューを受けて `"+m.base+"` へマージします。"+(protect?(" `"+m.base+"` への直接 push は禁止し、必ず Pull Request 経由でレビューを通します。"):""));
+  B.push("### コミットルール");
+  B.push("- 形式："+cs.fmt+"\n- 1行目は要点を簡潔に（目安50文字以内）。詳細は本文に背景・理由を書く\n- 1コミット＝1つの意味のある変更にまとめる");
+  B.push(mdTable(cs.head,cs.rows));
+  if(extra)B.push("### 補足\n"+extra);
+  return B.join("\n\n");}
+function gitEditor(s){const wrap=el("div");const r1=el("div","grid2");
+  const mc=el("div");mc.innerHTML='<label class="fl">ブランチ運用モデル</label>';const ms=el("select","preset");ms.style.width="100%";ms.innerHTML=`<option value="github">GitHub Flow（推奨）</option><option value="gitflow">Git Flow</option><option value="trunk">トランクベース</option><option value="simple">シンプル（main + work）</option>`;ms.value=s.model||"github";ms.onchange=e=>{s.model=e.target.value;refresh();};mc.appendChild(ms);r1.appendChild(mc);
+  const cc=el("div");cc.innerHTML='<label class="fl">コミット規約</label>';const csel=el("select","preset");csel.style.width="100%";csel.innerHTML=`<option value="conventional">Conventional Commits</option><option value="gitmoji">gitmoji（絵文字）</option><option value="simple">シンプル（日本語）</option>`;csel.value=s.commitStyle||"conventional";csel.onchange=e=>{s.commitStyle=e.target.value;refresh();};cc.appendChild(csel);r1.appendChild(cc);wrap.appendChild(r1);
+  const l=el("label");l.style.cssText="display:flex;gap:7px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer;margin-top:12px";const cb=el("input");cb.type="checkbox";cb.checked=s.protectMain!==false;cb.style.cssText="width:15px;height:15px;accent-color:var(--rose)";cb.onchange=e=>{s.protectMain=e.target.checked;refresh();};l.appendChild(cb);l.appendChild(document.createTextNode("main への直接push禁止（PR必須）を明記"));wrap.appendChild(l);
+  const ec=el("div");ec.innerHTML='<label class="fl">補足（任意・Markdown）</label>';const et=el("textarea");et.placeholder="レビュー観点・タグ/リリース手順・命名規則など";et.value=s.extra||"";et.oninput=e=>{s.extra=e.target.value;refresh();};ec.appendChild(et);wrap.appendChild(ec);
+  const note=el("div");note.style.cssText="font-size:11px;color:var(--faint);margin-top:8px";note.textContent="選択に応じて、ブランチ表・更新フロー（gitコマンド）・コミット規約表を自動生成します。";wrap.appendChild(note);return wrap;}
+
+function treeEditor(s){const wrap=el("div");const tb=el("div","tbtns");[["python","🐍 Python"],["node","🟩 Node"],["html","🧩 単一HTML"],["generic","📦 汎用"]].forEach(([k,lbl])=>{const b=el("button","addrow",lbl);b.style.background="rgba(216,178,92,.16)";b.style.color="var(--ink)";b.onclick=()=>{s.content=TREE_TPL[k];renderEditor();refresh();};tb.appendChild(b);});wrap.appendChild(tb);const ta=el("textarea","code");ta.style.marginTop="8px";ta.style.minHeight="170px";ta.placeholder="ディレクトリ構成（テンプレボタンで雛形挿入。罫線は ├─ │ └─ など）";ta.value=s.content||"";ta.oninput=e=>{s.content=e.target.value;refresh();};wrap.appendChild(ta);const note=el("div");note.style.cssText="font-size:11px;color:var(--faint);margin-top:6px";note.textContent="出力時はコードブロックで囲まれ、ツリーがそのまま表示されます。";wrap.appendChild(note);return wrap;}
+
+function setupEditor(s){const wrap=el("div");const r1=el("div","grid2");
+  const sc=el("div");sc.innerHTML='<label class="fl">スタック</label>';const ss=el("select","preset");ss.style.width="100%";ss.innerHTML=`<option value="python">Python</option><option value="node">Node.js</option><option value="html">単一HTML</option><option value="generic">汎用</option>`;ss.value=s.stack||"python";ss.onchange=e=>{s.stack=e.target.value;s.pm=defaultPm(s.stack);if(s.stack==="python"){s.opts=s.opts||{};s.opts.venv=true;}renderEditor();refresh();};sc.appendChild(ss);r1.appendChild(sc);
+  const pmOpts=PM_BY_STACK[s.stack||"python"]||[];const pc=el("div");pc.innerHTML='<label class="fl">パッケージ管理</label>';if(pmOpts.length){const ps=el("select","preset");ps.style.width="100%";ps.innerHTML=pmOpts.map(o=>`<option value="${o}">${o}</option>`).join("");ps.value=s.pm||pmOpts[0];ps.onchange=e=>{s.pm=e.target.value;refresh();};pc.appendChild(ps);}else{const sp=el("div");sp.style.cssText="font-size:12px;color:var(--faint);padding-top:9px";sp.textContent="（不要）";pc.appendChild(sp);}r1.appendChild(pc);wrap.appendChild(r1);
+  const opt=el("div");opt.style.cssText="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px";const mk=(k,lbl)=>{const l=el("label");l.style.cssText="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer";const cb=el("input");cb.type="checkbox";cb.checked=!!(s.opts&&s.opts[k]);cb.style.cssText="width:15px;height:15px;accent-color:var(--rose)";cb.onchange=e=>{s.opts=s.opts||{};s.opts[k]=e.target.checked;refresh();};l.appendChild(cb);l.appendChild(document.createTextNode(lbl));return l;};
+  if((s.stack||"python")==="python")opt.appendChild(mk("venv","venv 仮想環境"));opt.appendChild(mk("test","テスト"));opt.appendChild(mk("lint","静的解析(lint)"));opt.appendChild(mk("docker","Docker"));wrap.appendChild(opt);
+  const rc=el("div");rc.innerHTML='<label class="fl">実行コマンド（任意・空なら既定）</label>';const ri=el("input");ri.type="text";ri.placeholder=(s.stack==="node")?"npm run dev":"python -m your_module";ri.value=s.runCmd||"";ri.oninput=e=>{s.runCmd=e.target.value;refresh();};rc.appendChild(ri);wrap.appendChild(rc);
+  const ec=el("div");ec.innerHTML='<label class="fl">補足（任意・Markdown）</label>';const et=el("textarea");et.placeholder="環境変数や注意点など";et.value=s.extra||"";et.oninput=e=>{s.extra=e.target.value;refresh();};ec.appendChild(et);wrap.appendChild(ec);
+  const note=el("div");note.style.cssText="font-size:11px;color:var(--faint);margin-top:8px";note.textContent="入力に応じてセットアップ手順（コマンド）を自動生成します。プレビューで確認できます。";wrap.appendChild(note);return wrap;}
+
+function genGitignore(stack){const m={
+  python:"# Python\n__pycache__/\n*.py[cod]\n*.egg-info/\n.eggs/\n.venv/\nvenv/\nenv/\n.env\n.pytest_cache/\n.ruff_cache/\n.mypy_cache/\ndist/\nbuild/\n\n# OS / Editor\n.DS_Store\n.idea/\n.vscode/\n",
+  node:"# Node\nnode_modules/\ndist/\nbuild/\ncoverage/\n.cache/\nnpm-debug.log*\nyarn-error.log*\n.pnpm-debug.log*\n\n# Env\n.env\n.env.local\n\n# OS / Editor\n.DS_Store\n.idea/\n.vscode/\n",
+  html:"# Build / cache\n.cache/\ndist/\n\n# OS / Editor\n.DS_Store\n.idea/\n.vscode/\n*.log\n",
+  generic:".DS_Store\n.idea/\n.vscode/\n*.log\n.env\n"};return m[stack]||m.generic;}
+function genLicense(){const y=new Date().getFullYear();const author=((meta.author||"").trim())||"YOUR NAME";const lic=((meta.license||"MIT").trim());
+  if(/^MIT$/i.test(lic))return `MIT License\n\nCopyright (c) ${y} ${author}\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the "Software"), to deal\nin the Software without restriction, including without limitation the rights\nto use, copy, modify, merge, publish, distribute, sublicense, and/or sell\ncopies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\nThe above copyright notice and this permission notice shall be included in all\ncopies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\nOUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\nSOFTWARE.\n`;
+  return `${lic} License\n\nCopyright (c) ${y} ${author}\n\n（${lic} ライセンス本文をここに記載してください。https://choosealicense.com/ を参照）\n`;}
+function genContributing(){const nm=meta.name||"このプロジェクト";return `# コントリビューションガイド\n\n${nm} への貢献ありがとうございます！\n\n## 進め方\n1. Issue を立てて変更内容を相談する\n2. ブランチを作成する（例：\`feature/xxx\`）\n3. 変更し、テストとlintを通す\n4. Pull Request を送る\n\n## コミットメッセージ\n- 1行目に要点を簡潔に（例：\`fix: 〇〇を修正\`）\n- 本文に背景・理由を記載\n\n## 行動規範\n- 互いに敬意をもって、建設的に。「人ではなく仕組み」を改善する姿勢で。\n`;}
+function genCI(stack){if(stack==="python")return "name: CI\non:\n  push:\n    branches: [ main ]\n  pull_request:\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-python@v5\n        with:\n          python-version: '3.12'\n      - run: pip install -r requirements.txt\n      - run: pytest\n";
+  if(stack==="node")return "name: CI\non:\n  push:\n    branches: [ main ]\n  pull_request:\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - uses: actions/setup-node@v4\n        with:\n          node-version: '20'\n      - run: npm ci\n      - run: npm test --if-present\n";
+  return "name: CI\non:\n  push:\n    branches: [ main ]\n  pull_request:\n\njobs:\n  check:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4\n      - run: echo \"Add your build/test steps here\"\n";}
+function buildStarterFiles(){const stack=gh.stack||"generic";const files=[{name:"README.md",str:buildMd()}];if(gh.includeGitignore)files.push({name:".gitignore",str:genGitignore(stack)});if(gh.includeLicense)files.push({name:"LICENSE",str:genLicense()});if(gh.includeContributing)files.push({name:"CONTRIBUTING.md",str:genContributing()});if(gh.includeCI)files.push({name:".github/workflows/ci.yml",str:genCI(stack)});return files;}
+
+function renderRepoCard(){const c=el("div","card");c.appendChild(el("div","chead",'<span class="ic">📦</span><h2>GitHub構成（雛形ZIP）</h2>'));const b=el("div","cbody");
+  const r=el("div");r.innerHTML='<label class="fl">スタック（.gitignore / CI が変わります）</label>';const ss=el("select","preset");ss.style.width="100%";ss.innerHTML=`<option value="python">Python</option><option value="node">Node.js</option><option value="html">単一HTML</option><option value="generic">汎用</option>`;ss.value=gh.stack||"generic";ss.onchange=e=>{gh.stack=e.target.value;refresh();};r.appendChild(ss);b.appendChild(r);
+  const g=el("div");g.style.cssText="display:flex;flex-wrap:wrap;gap:14px;margin-top:10px";const mk=(k,lbl)=>{const l=el("label");l.style.cssText="display:flex;gap:6px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer";const cb=el("input");cb.type="checkbox";cb.checked=!!gh[k];cb.style.cssText="width:15px;height:15px;accent-color:var(--rose)";cb.onchange=e=>{gh[k]=e.target.checked;refresh();};l.appendChild(cb);l.appendChild(document.createTextNode(lbl));return l;};
+  g.appendChild(mk("includeGitignore",".gitignore"));g.appendChild(mk("includeLicense","LICENSE"));g.appendChild(mk("includeContributing","CONTRIBUTING.md"));g.appendChild(mk("includeCI",".github/workflows/ci.yml"));b.appendChild(g);
+  const note=el("div");note.style.cssText="font-size:11px;color:var(--faint);margin-top:10px;line-height:1.55";note.textContent="「📤 出力 →🎁 プロジェクト雛形(.zip)」で、README.md と選択したGitHub構成ファイルを1つのZIPにまとめて書き出します（LICENSEは作者名・年を自動反映）。";b.appendChild(note);c.appendChild(b);return c;}
+
+/* ================= START ================= */
+load();renderEditor();renderPreview();save();maybeShowGuideOnFirstUse();
+</script>
+</body>
+</html>
